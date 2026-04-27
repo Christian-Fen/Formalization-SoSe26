@@ -554,7 +554,6 @@ Here are some tricks for that:
 * `#check` to check the type of a term
 * Press `F12` on relevant definition to go to source file
 * `#loogle`
-* `#moogle`
 * `#check`
 * `unfold`
 * `simp?`
