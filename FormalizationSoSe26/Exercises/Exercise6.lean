@@ -222,7 +222,11 @@ They should be named and have the following docstrings:
 - `trans` should have the docstring "The transitivity property."
 -/
 
-/- DELETE THIS AND FILL ANSWER HERE-/
+class Preorder₁ (α : Type*) extends LE₁ α where
+   /-- The reflexivity property. -/
+   refl : ∀ a : α, a ≤₁ a
+   /-- he transitivity property. -/
+   trans : ∀ a b c : α, a ≤₁ b → b ≤₁ c → a ≤₁ c
 
 /-
 A partial order is a preorder with the additional property of antisymmetry.
@@ -232,7 +236,9 @@ Define a class called `PartialOrder₁` that extends `Preorder₁` with this pro
 It should be named `antisymm` and have the docstring "The antisymmetry property.".
 -/
 
-/- DELETE THIS AND FILL ANSWER HERE-/
+class PartialOrder₁ (α : Type*) extends Preorder₁ α where
+   /-- The antisymmetry property. -/
+   antisymm : ∀ a b : α, a ≤₁ b → b ≤₁ a → a = b
 
 /-
 We now bring in some algebraic structure.
@@ -249,7 +255,9 @@ Define a class called `CommMonoid₁` that extends `Monoid₁` with this propert
 It should be named `dia_comm` and have the docstring "Diamond is commutative."
 -/
 
-/- DELETE THIS AND FILL ANSWER HERE-/
+class CommMonoid₁ (α : Type*) extends Monoid₁ α where
+   /-- Diamond is commutative. -/
+   dia_comm : ∀ a b : α, a ⋄ b = b ⋄ a
 
 /-
 We now combine the two structures into one.
@@ -263,14 +271,19 @@ Define a class called `OrderedCommMonoid₁` that extends `PartialOrder₁` and 
 "The multiplication is compatible with the order."
 -/
 
-/- DELETE THIS AND FILL ANSWER HERE-/
+class OrderedCommMonoid₁ (α : Type*) extends PartialOrder₁ α, CommMonoid₁ α where
+   /-- The multiplication is compatible with the order. -/
+   le_mul_left₁ : ∀ a b c : α, a ≤₁ b → a ⋄ c ≤₁ b ⋄ c
 
 /-
 The class `OrderedCommMonoid₁` has many new properties.
 `export` all of them.
 -/
 
-/- DELETE THIS AND FILL ANSWER HERE-/
+export OrderedCommMonoid₁ (le_mul_left₁)
+export CommMonoid₁ (dia_comm)
+export PartialOrder₁ (antisymm)
+export Preorder₁ (trans refl)
 
 /-
 Now we want to prove something about ordered commutative monoids.
@@ -289,7 +302,11 @@ Again, this should be provable using only `rw`, `apply` and `exact`,
 and the properties of `OrderedCommMonoid₁`.
 -/
 
-/- DELETE THIS AND FILL ANSWER HERE-/
+lemma le_mul_right₁ {α : Type*} [OrderedCommMonoid₁ α] {a b c : α} (h : a ≤₁ b) :
+    c ⋄ a ≤₁ c ⋄ b := by
+    rw [dia_comm c a, dia_comm c b]
+    apply le_mul_left₁
+    exact h
 
 /-
 Finally, let us get an instance of a `OrderedCommMonoid₁`.
@@ -320,6 +337,17 @@ Define an `instance` in `OrderedCommMonoid₁ ℕ`.
 Use the properties given above.
 -/
 
-/- DELETE THIS AND FILL ANSWER HERE-/
+instance : OrderedCommMonoid₁ ℕ where
+   le := fun a b => a ≤ b
+   refl := le_refl
+   trans := fun _ _ _ hab hbc => le_trans hab hbc
+   antisymm := fun _ _  hab hba => le_antisymm hab hba
+   dia := Nat.add
+   dia_assoc := Nat.add_assoc
+   one := 0
+   one_dia := Nat.zero_add
+   dia_one := Nat.add_zero
+   dia_comm := Nat.add_comm
+   le_mul_left₁ := fun _ _ c h => Nat.add_le_add_right h c
 
 end ordered_monoid
