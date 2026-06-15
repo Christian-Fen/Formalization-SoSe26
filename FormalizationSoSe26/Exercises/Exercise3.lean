@@ -18,15 +18,41 @@ variable (a b c d : ℝ)
 -- Now use those to prove the following.
 -- Only use `apply`.
 example : min a b = min b a := by
-  sorry
+  apply le_antisymm
+  · apply le_min
+    · apply min_le_right
+    · exact min_le_left a b
+  · apply le_min
+    · apply min_le_right
+    · apply min_le_left
 
 -- Now redo the exercise with `simp`.
 example : min a b = min b a := by
-  sorry
+  apply le_antisymm
+  · simp
+  · simp
 
 -- Now solve the following only with `apply` and nothing else!
 example : min a (min b c) = min (min a b) c := by
-  sorry
+  apply le_antisymm
+  · apply le_min
+    · apply le_min
+      · apply min_le_left
+      · apply le_trans
+        · apply min_le_right
+        · apply min_le_left
+    · apply le_trans
+      · apply min_le_right
+      · apply min_le_right
+  · apply le_min
+    · apply le_trans
+      · apply min_le_left
+      · apply min_le_left
+    apply le_min
+    · apply le_trans
+      · apply min_le_left
+      · apply min_le_right
+    · apply min_le_right
 
 -- Again try again with `simp`.
 example : min a (min b c) = min (min a b) c := by
@@ -59,18 +85,23 @@ open Real Nat
 
 example (a b c : ℝ) (h : a = b + c) : exp (2 * a) = (exp b) ^ 2 * (exp c) ^ 2 := by
   calc
-    exp (2 * a) = exp (2 * (b + c))                 := by sorry
-              _ = exp ((b + b) + (c + c))           := by sorry
-              _ = exp (b + b) * exp (c + c)         := by sorry
-              _ = (exp b * exp b) * (exp c * exp c) := by sorry
-              _ = (exp b) ^ 2 * (exp c)^2           := by sorry
+    exp (2 * a) = exp (2 * (b + c))                 := by rw [h]
+              _ = exp ((b + b) + (c + c))           := by ring_nf
+              _ = exp (b + b) * exp (c + c)         := by apply exp_add
+              _ = (exp b * exp b) * (exp c * exp c) := by rw [exp_add,exp_add]
+              _ = (exp b) ^ 2 * (exp c)^2           := by rw[pow_two,pow_two]
 
 -- Use `calc` to prove the following from the axioms of rings, without using `ring`.
 -- You can however use
 #check add_neg_cancel_comm
 #check add_assoc
 
-example {a b c : ℝ} (h : a + b = a + c) : b = c := by sorry
+example {a b c : ℝ} (h : a + b = a + c) : b = c := by
+  calc
+  b = a + b - a       := by ring
+  _ = a + c - a       := by rw [h]
+  _ = c               := by ring
+
 
 /-
 `(n)!` denotes the factorial function on the natural numbers.
@@ -78,7 +109,10 @@ Here the parentheses are mandatory when writing.
 Use `calc` to solve this question.
 For the different steps use `exact?` to find the lemmas you need in the library.
  -/
-example (n m : ℕ) (h : n ≤ m) : (n)! ∣ (m + 1)! := by sorry
+example (n m : ℕ) (h : n ≤ m) : (n)! ∣ (m + 1)! := by
+  calc
+  (n)! ∣ (m)!   := by exact factorial_dvd_factorial h
+  _ ∣ (m + 1)!  := by exact Dvd.intro_left m.succ rfl
 
 end calculation
 
@@ -100,18 +134,37 @@ section contradiction
 
 -- This first one should not require `by_contra`.
 example (P : Prop) (h : P) : ¬¬P := by
-  sorry
+  intro nP
+  exact nP h
 
 example (P : Prop) (h : ¬¬P) : P := by
-  sorry
+  by_contra nP
+  exact h nP
 
 example (P : Prop) : (P → ¬P) → ¬P := by
-  sorry
+  intro h j
+  have k := h j
+  exact k j
 
 -- Let's prove the famous De Morgan's laws.
 -- Note these two are harder than the three previous ones.
 example (P Q : Prop) : ¬ (P ∨ Q) ↔ ¬P ∧ ¬Q := by
-  sorry
+  constructor
+  · intro nPQ
+    constructor
+    · intro p
+      apply nPQ
+      left
+      exact p
+    · intro p
+      apply nPQ
+      right
+      exact p
+  · intro nPnQ PQ
+    obtain ⟨nP,nQ⟩ := nPnQ
+    rcases PQ with fP|fQ
+    · exact nP fP
+    · exact nQ fQ
 
 example (P Q : Prop) : ¬ (P ∧ Q) ↔ ¬P ∨ ¬Q := by
   sorry

@@ -90,26 +90,32 @@ variable {u v : V}
 -- In a simple graph, adjacency is symmetric.
 theorem ex01_adj_symmetric
     (h : G.Adj u v) : G.Adj v u := by
-  sorry
+  exact h.symm
 
 -- Exercise 2:
 -- Adjacent vertices are distinct.
 theorem ex02_adjacent_vertices_distinct
     (h : G.Adj u v) : u ≠ v := by
-  sorry
+  by_contra
+  rw[this] at h
+  simp only [SimpleGraph.irrefl] at h
+
 
 -- Exercise 3:
 -- If two distinct vertices are not adjacent in `G`,
 -- then they are adjacent in the complement graph `Gᶜ`.
 theorem ex03_edge_in_complement
     (hne : u ≠ v) (hnot : ¬ G.Adj u v) : Gᶜ.Adj u v := by
-  sorry
+  rw[SimpleGraph.compl_adj]
+  exact ⟨hne, hnot⟩
 
 -- Exercise 4:
 -- If an edge is in `G`, then it is in the union graph `G ⊔ H`.
 theorem ex04_edge_in_union_left
     (h : G.Adj u v) : (G ⊔ H).Adj u v := by
-  sorry
+  rw[SimpleGraph.sup_adj]
+  left
+  exact h
 
 end Exercises
 
@@ -132,6 +138,11 @@ variable {u v : V}
 theorem directed_edge_becomes_undirected_in_inclusive_forget
     (h : D.Adj u v) (hne : u ≠ v) :
     D.toSimpleGraphInclusive.Adj u v := by
-  sorry
+  rw[Digraph.toSimpleGraphInclusive]
+  simp only [SimpleGraph.fromRel_adj, ne_eq]
+  constructor
+  · exact hne
+  · left
+    exact h
 
 end ExtraExercise

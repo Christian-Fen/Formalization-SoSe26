@@ -3,17 +3,66 @@ import Mathlib.Tactic
 section set_theory
 
 example (X : Type) (a : X) : a ∈ (∅ : Set X) → False := by
-  sorry
+  intro f
+  exact f
 
 example (X : Type) (A B : Set X) (hAinB : A ⊆ B) : A ∪ B = B := by
-  sorry
+  ext f
+  constructor
+  · intro g
+    rcases g with ga|gb
+    · exact hAinB ga
+    · exact gb
+  · intro h
+    right
+    exact h
 
 example (X : Type) (A B : Set X) (hab : A ∩ B = ∅) : A \ B = A := by
-  sorry
+  ext f
+  constructor
+  · intro g
+    obtain ⟨ga,gb⟩ := g
+    exact ga
+  · intro h
+    constructor
+    · exact h
+    · intro i
+      have j : f ∈ A ∩ B := ⟨h,i⟩
+      --by {
+      --  constructor
+      --  · exact h
+      --  · exact i
+      --}
+      rw[hab] at j
+      contradiction
 
 
 example (X : Type) (A B C : Set X) : A ∩ (B ∪ C) = A ∩ B ∪ A ∩ C := by
-  sorry
+  ext f
+  constructor
+  · intro g
+    obtain ⟨ga, gbc⟩ := g
+    rcases gbc with gb|gc
+    · left
+      constructor
+      · exact ga
+      · exact gb
+    · right
+      constructor
+      · exact ga
+      · exact gc
+  · intro h
+    rcases h with hab|hac
+    · obtain ⟨ha,hb⟩ := hab
+      constructor
+      · exact ha
+      · left
+        exact hb
+    · obtain ⟨ha,hc⟩ := hac
+      constructor
+      · exact ha
+      · right
+        exact hc
 
 example (X : Type) (A B C : Set X) : (A \ B) \ C = A \ (B ∪ C) := by
   sorry
@@ -36,10 +85,40 @@ section indexed_operations
 -/
 
 example {α I : Type} (A : I → Set α) (s : Set α) : (s ∩ ⋃ i, A i) = ⋃ i, A i ∩ s := by
-  sorry
+  ext f
+  simp only [Set.mem_iUnion,Set.mem_inter_iff]
+  constructor
+  · intro g
+    obtain ⟨gs,⟨i,gi⟩⟩ := g
+    use i
+  · intro h
+    obtain ⟨i,⟨hAi,hs⟩⟩ := h
+    constructor
+    · exact hs
+    · use i
 
 example {α I : Type} (A B : I → Set α) : (⋂ i, A i ∩ B i) = (⋂ i, A i) ∩ ⋂ i, B i := by
-  sorry
+  ext f
+  simp only [Set.mem_iInter,Set.mem_inter_iff]
+  constructor
+  · intro g
+    constructor
+    · intro i
+      have gab := g i
+      obtain ⟨ga,gb⟩ := gab
+      exact ga
+    · intro i
+      have gab := g i
+      obtain ⟨ga,gb⟩ := gab
+      exact gb
+  · intro h
+    obtain ⟨hA,hB⟩ := h
+    intro hi
+    constructor
+    · have hiA := hA hi
+      exact hiA
+    · have hiB := hB hi
+      exact hiB
 
 example {α I : Type} (A : I → Set α) (s : Set α) : (s ∪ ⋂ i, A i) = ⋂ i, A i ∪ s := by
   sorry
@@ -52,30 +131,58 @@ section functions_basics
 That means if I have `x : Empty`, then `cases x` will close every goal!
 Let's prove that every function out of `Empty` is injective. -/
 example (X : Type) (f : Empty → X) : Function.Injective f := by
-  sorry
+  unfold Function.Injective
+  intro g
+  cases g
 
 /- The `Unit` type is a type with one element.
 That means if `x : Unit`, then `x = Unit.unit`.
 We obtain that via `cases x`.
 Let's use that to prove that every function out of `Unit` is injective. -/
 example (X : Type) (f : Unit → X) : Function.Injective f := by
-  sorry
+  unfold Function.Injective
+  intro g h i
+  cases g
+  cases h
+  rfl
 
 -- Recall that if a type `X` is inhabited, then there is a default element `default : X`.
 example (X : Type) [Inhabited X] (f : X → Unit) : Function.Surjective f := by
-  sorry
+  unfold Function.Surjective
+  intro g
+  use default
 
 example (X Y : Type) (A B : Set Y) (f : X → Y) : f ⁻¹' (A ∩ B) = f ⁻¹' A ∩ f ⁻¹' B := by
-  sorry
+  ext g
+  unfold Set.preimage
+  rfl
 
 example {X Y : Type} {f : X → Y} (A : Set X) (h : Function.Injective f) : f ⁻¹' (f '' A) ⊆ A := by
-  sorry
+  intro g i
+  unfold Set.preimage Set.image at i
+  obtain ⟨j,k,l⟩ := i
+  have m := h l
+  rw[← m]
+  exact k
 
 example {X Y : Type} {f : X → Y} (B : Set Y) : f '' (f ⁻¹' B) ⊆ B := by
-  sorry
+  intro g h
+  unfold Set.preimage Set.image at h
+  obtain ⟨i,j,k⟩ := h
+  rw[← k]
+  exact j
 
 example {X Y : Type} {f : X → Y} (B : Set Y) (h : Function.Surjective f) : B ⊆ f '' (f ⁻¹' B) := by
-  sorry
+  intro g i
+  unfold Set.preimage Set.image
+  have x := h g
+  obtain ⟨j,k⟩ := x
+  use j
+  constructor
+  · simp only [Set.mem_setOf_eq]
+    rw[k]
+    exact i
+  · exact k
 
 example {X Y : Type} {A B : Set X} (f : X → Y) (h : A ⊆ B) : f '' A ⊆ f '' B := by
   sorry

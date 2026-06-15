@@ -2,8 +2,8 @@
 
 Please fill out the following. You can fill in the project topic once you have decided.
 ```
-Name:
-Project topic:
+Name: Christian Fenske
+Project topic: Graphentheorie
 ```
 
 ## Your own project

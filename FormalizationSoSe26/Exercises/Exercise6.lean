@@ -12,9 +12,11 @@ Use `structure` to construct a new constructor:
 * The data should be three integers `x` `y` `z` in `ℤ`
 * It should satisfy `extensionality`
 -/
-
-/- DELETE THIS AND FILL ANSWER HERE-/
-
+@[ext]
+structure new_triple where
+   x : Int
+   y : Int
+   z : Int
 /-
 Now, solve the following exercises about `new_triple`:
 
@@ -25,17 +27,34 @@ Now, solve the following exercises about `new_triple`:
    using the numbers `x = 1`, `y = 2`, `z = -3`.
 -/
 
-/- DELETE THIS AND FILL ANSWER HERE-/
+example : new_triple := new_triple.mk 1 2 3
+
+example : new_triple := ⟨1, 2, 3⟩
+
+example : new_triple where
+   x := 1
+   y := 2
+   z := 3
 
 /-
 2. Uncomment the following expression and prove it.
 -/
 
-/-
+
 example (x₁ y₁ z₁ x₂ y₂ z₂ : ℤ) :
    (x₁ = x₂) ∧ (y₁ = y₂) ∧ (z₁ = z₂) ↔ (⟨x₁, y₁, z₁⟩ :
    new_triple )= (⟨x₂, y₂, z₂⟩ : new_triple) := by
--/
+   constructor
+   · intro f
+     obtain ⟨fx,fy,fz⟩ := f
+     rw[fx,fy,fz]
+   · intro f
+     cases f
+     constructor
+     · rfl
+     · constructor
+       · rfl
+       · rfl
 
 
 /-
@@ -46,7 +65,18 @@ example (x₁ y₁ z₁ x₂ y₂ z₂ : ℤ) :
   Close the namespace `new_triple`.
 -/
 
-/- DELETE THIS AND FILL ANSWER HERE-/
+namespace new_triple
+
+def add (a b : new_triple) : new_triple :=
+   ⟨a.x + b.x, a.y + b.y, a.z + b.z⟩
+
+def mul (a b : new_triple) : new_triple :=
+   ⟨a.x * b.x, a.y * b.y, a.z * b.z⟩
+
+def sub (a b : new_triple) : new_triple :=
+   ⟨a.x - b.x, a.y - b.y, a.z - b.z⟩
+
+end new_triple
 
 /-
 4. Use `#eval` to compute
@@ -56,7 +86,9 @@ example (x₁ y₁ z₁ x₂ y₂ z₂ : ℤ) :
    For this you want to use `#eval` to evaluate an expression.
 -/
 
-/- DELETE THIS AND FILL ANSWER HERE-/
+#eval new_triple.add ⟨1, 2, -3⟩ ⟨2, -5, 6⟩
+#eval new_triple.mul ⟨2, -3, 2⟩ ⟨1, -2, 2⟩
+#eval new_triple.sub ⟨1, 2, -3⟩ ⟨4, 1, 3⟩
 
 /-
 5. Reopen the namespace `new_triple` and prove:
@@ -65,13 +97,28 @@ example (x₁ y₁ z₁ x₂ y₂ z₂ : ℤ) :
    Close the namespace `new_triple`.
 -/
 
-/- DELETE THIS AND FILL ANSWER HERE-/
+namespace new_triple
+
+def mul_comm (a b : new_triple) : mul a b = mul b a := by
+   ext
+   · simp only [mul, Int.mul_comm]
+   · simp only [mul, Int.mul_comm]
+   · simp only [new_triple.mul, Int.mul_comm]
+
+def mul_assoc (a b c : new_triple) : mul (mul a b) c = mul a (mul b c) := by
+   ext
+   · simp only [mul, Int.mul_assoc]
+   · simp only [mul, Int.mul_assoc]
+   · simp only [mul, Int.mul_assoc]
+
+end new_triple
 
 /-
 6. Use `#check` to compare the definition of `new_triple.mul_comm` and `mul_comm`.
 -/
 
-/- DELETE THIS AND FILL ANSWER HERE-/
+#check new_triple.mul_comm
+#check mul_comm
 
 end triple_constructors
 
@@ -99,7 +146,8 @@ Show that every `Group₄` gives us a `Group₅`.
 Here you probably want to use `Group₅.mk`.
 -/
 @[reducible]
-def group4_to_group5 {G : Type*} [Group₄ G] : Group₅ G := sorry
+def group4_to_group5 {G : Type*} [Group₄ G] : Group₅ G :=
+   Group₅.mk inv_dia
 
 /-
 Now, we also go the other way around.
@@ -113,29 +161,37 @@ and the structure of `Monoid₁` and `Group₅`.
 -/
 lemma equal_inverses {M : Type*} [Monoid₁ M] {a b c : M} (hba : b ⋄ a = 𝟙) (hac : a ⋄ c = 𝟙) :
    b = c := by
-      sorry
+      rw [← dia_one b]
+      rw [← hac]
+      rw [← dia_assoc]
+      rw [hba]
+      rw [one_dia]
 
 
 lemma dia_inv' {G : Type*} [Group₅ G] (a : G) : a ⋄ a⁻¹ = 𝟙 := by
-  sorry
+  have first := inv_dia (a⁻¹)
+  have second := equal_inverses (first) (inv_dia a)
+  rw[second] at first
+  exact first
 
 /-
 Now, use this last lemma to go from `Group₅` to `Group₄`.
 Here you probably want to use `Group₄.mk`.
 -/
 @[reducible]
-def group5_to_group4 {G : Type*} [Group₅ G] : Group₄ G := sorry
+def group5_to_group4 {G : Type*} [Group₅ G] : Group₄ G :=
+   Group₄.mk inv_dia dia_inv'
 
 /-
 Let us end this by observing that the two constructions are inverse to each other.
 -/
 lemma group4_to_group5_to_group4 {G : Type*} [h : Group₄ G] :
    @group5_to_group4 G (@group4_to_group5 G h) = h  := by
-      sorry
+      rfl
 
 lemma group5_to_group4_to_group5 {G : Type*} [h : Group₅ G] :
    @group4_to_group5 G (@group5_to_group4 G h) = h  := by
-      sorry
+      rfl
 
 end group_five
 
