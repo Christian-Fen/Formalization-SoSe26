@@ -10,23 +10,28 @@ For this exercise recall the following properties of `Finset`:
 #check mem_inter
 #check mem_union
 example (X : Type*) [DecidableEq X] (A B C : Finset X) : A ∩ (B ∪ C) = (A ∩ B) ∪ (A ∩ C) := by
-  sorry
+  ext f
+  simp only [mem_inter, mem_union]
+  tauto
 
 /-
 This next one should be very straightforward, so don't overthink it!
 -/
 example (X Y : Type*) [Fintype X] [Fintype Y] :
   card (Fin 2 → (X ⊕ Y)) = (card X)^2 + 2*(card X) * (card Y) + (card Y)^2 := by
-  sorry
+  simp only [Fintype.card_pi, card_sum, prod_const, card_univ, Fintype.card_fin]
+  ring
 
 /-
 Recall from the lecture how we can prove the following two properties:
 -/
 example {X Y : Type*} [DecidableEq X] [DecidableEq Y] (A B : Finset X) :
-  #(A ∪ B) = #A  + #B  -  #(A ∩ B)  := by sorry
+  #(A ∪ B) = #A  + #B  -  #(A ∩ B)  := by
+  simp only [card_union]
 
 example {X Y : Type*} [DecidableEq X] [DecidableEq Y] (A : Finset X) (C : Finset Y) :
-  #(A ×ˢ C) = #A * #C := by sorry
+  #(A ×ˢ C) = #A * #C := by
+  simp only [card_product]
 
 /-
 Now, use the experience you gained to solve the following exercise.
@@ -40,7 +45,10 @@ You might also want to use the following properties of `Nat`:
 
 example {X Y : Type*} [DecidableEq X] [DecidableEq Y] (A B : Finset X) (C : Finset Y) :
   #((A ∪ B) ×ˢ C) = #A * #C + #B * #C -  #(A ∩ B) * #C := by
-  sorry
+  simp only [card_product,card_union]
+  ring_nf
+  simp only[Nat.sub_mul,Nat.add_mul]
+  ring
 
 end finite_sets
 
@@ -66,26 +74,25 @@ Your definition should be motivated by what
 addition and multiplication of natural numbers should be.
 -/
 def add : MyNat → MyNat → MyNat
-  | x, zero => sorry
-  | x, succ y => sorry
+  | x, zero => x
+  | x, succ y => succ (add x y)
 
 /-
 Uncomment the following if you have defined `add`.
 -/
--- #eval add (succ zero) (succ zero)
+#eval add (succ zero) (succ zero)
 /-
 It should give us `MyNat.succ (MyNat.succ (MyNat.zero))`
 -/
 
 def mul : MyNat → MyNat → MyNat
-  | _ , zero => sorry
-  | x, succ y => sorry
-
+  | _ , zero => zero
+  | x, succ y => add (mul x y) x
 
 /-
 Uncomment the following if you have defined `mul`.
 -/
--- #eval mul (succ (succ zero)) (succ (succ zero))
+#eval mul (succ (succ zero)) (succ (succ zero))
 /-
 It should give us `MyNat.succ (MyNat.succ (MyNat.succ (MyNat.succ (MyNat.zero))))`
 -/
@@ -93,11 +100,27 @@ It should give us `MyNat.succ (MyNat.succ (MyNat.succ (MyNat.succ (MyNat.zero)))
 /-
 Now, use the inductive definition to prove the following theorems.
 -/
-theorem zero_add (n : MyNat) : add zero n = n := by sorry
+theorem zero_add (n : MyNat) : add zero n = n := by
+  induction n with
+  | zero => rfl
+  | succ n nh =>
+    rw[add]
+    rw[nh]
 
-theorem succ_add (m n : MyNat) : add (succ m) n = succ (add m n) := by sorry
+theorem succ_add (m n : MyNat) : add (succ m) n = succ (add m n) := by
+  induction n with
+  | zero => rfl
+  | succ n nh =>
+    rw[add,nh,add]
+  --  rw[nh]
+  --  rw[add]
 
-theorem add_comm (m n : MyNat) : add m n = add n m := by sorry
+theorem add_comm (m n : MyNat) : add m n = add n m := by
+  induction n with
+  | zero =>
+    rw[zero_add,add]
+  | succ n nh =>
+    rw[add,nh,succ_add]
 
 theorem add_assoc (m n k : MyNat) : add (add m n) k = add m (add n k) := by sorry
 
@@ -120,19 +143,27 @@ Complete the following proof steps, to show that the square root of `2` is not r
 example {m n : ℕ} (coprime_mn : m.Coprime n) : m ^ 2 ≠ 2 * n ^ 2 := by
   intro sqr_eq
   have m_is_even : 2 ∣ m := by
-    sorry
+    have f: 2 ∣ m ^ 2 := by use n ^ 2
+    exact even_of_even_sqr₄ f
   obtain ⟨k, meq⟩ := dvd_iff_exists_eq_mul_left.mp m_is_even
   have step₁ : 2 * (2 * k ^ 2) = 2 * n ^ 2 := by
     rw [← sqr_eq, meq]
     ring
   have step₂ : 2 * k ^ 2 = n ^ 2 := by
-    sorry
+    calc
+    2 * k ^ 2   = 2 * (2 * k ^ 2) / 2 := by norm_num
+    _           = 2 * n ^ 2 / 2 := by rw[step₁]
+    _            = n ^ 2 := by norm_num
   have n_is_even : 2 ∣ n := by
-    sorry
+    have g: 2 ∣ n ^ 2 := by
+      use k ^ 2
+      exact step₂.symm
+    exact even_of_even_sqr₄ g
   have : 2 ∣ m.gcd n := by
-    sorry
+    exact Nat.dvd_gcd m_is_even n_is_even
   have weird : 2 ∣ 1 := by
-    sorry
+    rw[coprime_mn] at this
+    exact this
   norm_num at weird
 
 /-

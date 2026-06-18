@@ -411,7 +411,6 @@ Here are some facts that can help us.
 #check Nat.prod_primeFactorsList
 #check Nat.primeFactorsList_unique
 
-
 /-
 In the exercises we want to use the prime factorization list to prove that
 the square root of `2` is not rational. For that we need some computational

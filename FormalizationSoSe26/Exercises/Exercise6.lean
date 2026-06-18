@@ -12,9 +12,11 @@ Use `structure` to construct a new constructor:
 * The data should be three integers `x` `y` `z` in `ℤ`
 * It should satisfy `extensionality`
 -/
-
-/- DELETE THIS AND FILL ANSWER HERE-/
-
+@[ext]
+structure new_triple where
+   x : Int
+   y : Int
+   z : Int
 /-
 Now, solve the following exercises about `new_triple`:
 
@@ -25,17 +27,34 @@ Now, solve the following exercises about `new_triple`:
    using the numbers `x = 1`, `y = 2`, `z = -3`.
 -/
 
-/- DELETE THIS AND FILL ANSWER HERE-/
+example : new_triple := new_triple.mk 1 2 3
+
+example : new_triple := ⟨1, 2, 3⟩
+
+example : new_triple where
+   x := 1
+   y := 2
+   z := 3
 
 /-
 2. Uncomment the following expression and prove it.
 -/
 
-/-
+
 example (x₁ y₁ z₁ x₂ y₂ z₂ : ℤ) :
    (x₁ = x₂) ∧ (y₁ = y₂) ∧ (z₁ = z₂) ↔ (⟨x₁, y₁, z₁⟩ :
    new_triple )= (⟨x₂, y₂, z₂⟩ : new_triple) := by
--/
+   constructor
+   · intro f
+     obtain ⟨fx,fy,fz⟩ := f
+     rw[fx,fy,fz]
+   · intro f
+     cases f
+     constructor
+     · rfl
+     · constructor
+       · rfl
+       · rfl
 
 
 /-
@@ -46,7 +65,18 @@ example (x₁ y₁ z₁ x₂ y₂ z₂ : ℤ) :
   Close the namespace `new_triple`.
 -/
 
-/- DELETE THIS AND FILL ANSWER HERE-/
+namespace new_triple
+
+def add (a b : new_triple) : new_triple :=
+   ⟨a.x + b.x, a.y + b.y, a.z + b.z⟩
+
+def mul (a b : new_triple) : new_triple :=
+   ⟨a.x * b.x, a.y * b.y, a.z * b.z⟩
+
+def sub (a b : new_triple) : new_triple :=
+   ⟨a.x - b.x, a.y - b.y, a.z - b.z⟩
+
+end new_triple
 
 /-
 4. Use `#eval` to compute
@@ -56,7 +86,9 @@ example (x₁ y₁ z₁ x₂ y₂ z₂ : ℤ) :
    For this you want to use `#eval` to evaluate an expression.
 -/
 
-/- DELETE THIS AND FILL ANSWER HERE-/
+#eval new_triple.add ⟨1, 2, -3⟩ ⟨2, -5, 6⟩
+#eval new_triple.mul ⟨2, -3, 2⟩ ⟨1, -2, 2⟩
+#eval new_triple.sub ⟨1, 2, -3⟩ ⟨4, 1, 3⟩
 
 /-
 5. Reopen the namespace `new_triple` and prove:
@@ -65,13 +97,28 @@ example (x₁ y₁ z₁ x₂ y₂ z₂ : ℤ) :
    Close the namespace `new_triple`.
 -/
 
-/- DELETE THIS AND FILL ANSWER HERE-/
+namespace new_triple
+
+def mul_comm (a b : new_triple) : mul a b = mul b a := by
+   ext
+   · simp only [mul, Int.mul_comm]
+   · simp only [mul, Int.mul_comm]
+   · simp only [new_triple.mul, Int.mul_comm]
+
+def mul_assoc (a b c : new_triple) : mul (mul a b) c = mul a (mul b c) := by
+   ext
+   · simp only [mul, Int.mul_assoc]
+   · simp only [mul, Int.mul_assoc]
+   · simp only [mul, Int.mul_assoc]
+
+end new_triple
 
 /-
 6. Use `#check` to compare the definition of `new_triple.mul_comm` and `mul_comm`.
 -/
 
-/- DELETE THIS AND FILL ANSWER HERE-/
+#check new_triple.mul_comm
+#check mul_comm
 
 end triple_constructors
 
@@ -99,7 +146,8 @@ Show that every `Group₄` gives us a `Group₅`.
 Here you probably want to use `Group₅.mk`.
 -/
 @[reducible]
-def group4_to_group5 {G : Type*} [Group₄ G] : Group₅ G := sorry
+def group4_to_group5 {G : Type*} [Group₄ G] : Group₅ G :=
+   Group₅.mk inv_dia
 
 /-
 Now, we also go the other way around.
@@ -113,29 +161,37 @@ and the structure of `Monoid₁` and `Group₅`.
 -/
 lemma equal_inverses {M : Type*} [Monoid₁ M] {a b c : M} (hba : b ⋄ a = 𝟙) (hac : a ⋄ c = 𝟙) :
    b = c := by
-      sorry
+      rw [← dia_one b]
+      rw [← hac]
+      rw [← dia_assoc]
+      rw [hba]
+      rw [one_dia]
 
 
 lemma dia_inv' {G : Type*} [Group₅ G] (a : G) : a ⋄ a⁻¹ = 𝟙 := by
-  sorry
+  have first := inv_dia (a⁻¹)
+  have second := equal_inverses (first) (inv_dia a)
+  rw[second] at first
+  exact first
 
 /-
 Now, use this last lemma to go from `Group₅` to `Group₄`.
 Here you probably want to use `Group₄.mk`.
 -/
 @[reducible]
-def group5_to_group4 {G : Type*} [Group₅ G] : Group₄ G := sorry
+def group5_to_group4 {G : Type*} [Group₅ G] : Group₄ G :=
+   Group₄.mk inv_dia dia_inv'
 
 /-
 Let us end this by observing that the two constructions are inverse to each other.
 -/
 lemma group4_to_group5_to_group4 {G : Type*} [h : Group₄ G] :
    @group5_to_group4 G (@group4_to_group5 G h) = h  := by
-      sorry
+      rfl
 
 lemma group5_to_group4_to_group5 {G : Type*} [h : Group₅ G] :
    @group4_to_group5 G (@group5_to_group4 G h) = h  := by
-      sorry
+      rfl
 
 end group_five
 
@@ -166,7 +222,11 @@ They should be named and have the following docstrings:
 - `trans` should have the docstring "The transitivity property."
 -/
 
-/- DELETE THIS AND FILL ANSWER HERE-/
+class Preorder₁ (α : Type*) extends LE₁ α where
+   /-- The reflexivity property. -/
+   refl : ∀ a : α, a ≤₁ a
+   /-- he transitivity property. -/
+   trans : ∀ a b c : α, a ≤₁ b → b ≤₁ c → a ≤₁ c
 
 /-
 A partial order is a preorder with the additional property of antisymmetry.
@@ -176,7 +236,9 @@ Define a class called `PartialOrder₁` that extends `Preorder₁` with this pro
 It should be named `antisymm` and have the docstring "The antisymmetry property.".
 -/
 
-/- DELETE THIS AND FILL ANSWER HERE-/
+class PartialOrder₁ (α : Type*) extends Preorder₁ α where
+   /-- The antisymmetry property. -/
+   antisymm : ∀ a b : α, a ≤₁ b → b ≤₁ a → a = b
 
 /-
 We now bring in some algebraic structure.
@@ -193,7 +255,9 @@ Define a class called `CommMonoid₁` that extends `Monoid₁` with this propert
 It should be named `dia_comm` and have the docstring "Diamond is commutative."
 -/
 
-/- DELETE THIS AND FILL ANSWER HERE-/
+class CommMonoid₁ (α : Type*) extends Monoid₁ α where
+   /-- Diamond is commutative. -/
+   dia_comm : ∀ a b : α, a ⋄ b = b ⋄ a
 
 /-
 We now combine the two structures into one.
@@ -207,14 +271,19 @@ Define a class called `OrderedCommMonoid₁` that extends `PartialOrder₁` and 
 "The multiplication is compatible with the order."
 -/
 
-/- DELETE THIS AND FILL ANSWER HERE-/
+class OrderedCommMonoid₁ (α : Type*) extends PartialOrder₁ α, CommMonoid₁ α where
+   /-- The multiplication is compatible with the order. -/
+   le_mul_left₁ : ∀ a b c : α, a ≤₁ b → a ⋄ c ≤₁ b ⋄ c
 
 /-
 The class `OrderedCommMonoid₁` has many new properties.
 `export` all of them.
 -/
 
-/- DELETE THIS AND FILL ANSWER HERE-/
+export OrderedCommMonoid₁ (le_mul_left₁)
+export CommMonoid₁ (dia_comm)
+export PartialOrder₁ (antisymm)
+export Preorder₁ (trans refl)
 
 /-
 Now we want to prove something about ordered commutative monoids.
@@ -233,7 +302,11 @@ Again, this should be provable using only `rw`, `apply` and `exact`,
 and the properties of `OrderedCommMonoid₁`.
 -/
 
-/- DELETE THIS AND FILL ANSWER HERE-/
+lemma le_mul_right₁ {α : Type*} [OrderedCommMonoid₁ α] {a b c : α} (h : a ≤₁ b) :
+    c ⋄ a ≤₁ c ⋄ b := by
+    rw [dia_comm c a, dia_comm c b]
+    apply le_mul_left₁
+    exact h
 
 /-
 Finally, let us get an instance of a `OrderedCommMonoid₁`.
@@ -264,6 +337,17 @@ Define an `instance` in `OrderedCommMonoid₁ ℕ`.
 Use the properties given above.
 -/
 
-/- DELETE THIS AND FILL ANSWER HERE-/
+instance : OrderedCommMonoid₁ ℕ where
+   le := fun a b => a ≤ b
+   refl := le_refl
+   trans := fun _ _ _ hab hbc => le_trans hab hbc
+   antisymm := fun _ _  hab hba => le_antisymm hab hba
+   dia := Nat.add
+   dia_assoc := Nat.add_assoc
+   one := 0
+   one_dia := Nat.zero_add
+   dia_one := Nat.add_zero
+   dia_comm := Nat.add_comm
+   le_mul_left₁ := fun _ _ c h => Nat.add_le_add_right h c
 
 end ordered_monoid

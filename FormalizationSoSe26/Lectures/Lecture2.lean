@@ -318,9 +318,10 @@ example (P Q : Prop) : P ∧ Q → Q := by
 
 example (P Q : Prop) : P ∧ Q → Q ∧ P := by
   intro h
+  obtain ⟨hP, hQ⟩ := h
   constructor
-  · exact h.2
-  · exact h.1
+  · exact hQ
+  · exact hP
 
 
 /-

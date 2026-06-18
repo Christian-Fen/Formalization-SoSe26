@@ -975,6 +975,8 @@ Let's see how this is done in practice:
 -/
 #check Monoid₁.mk
 #check Monoid₂.mk
+#print Monoid₂
+#print Monoid₁
 
 /-
 Note, this does *not* mean there is no `Monoid₁.toDiaOneClass₁`
