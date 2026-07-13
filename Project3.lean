@@ -58,23 +58,37 @@ G.Colorable (n + 1) := by
       -- --     rw [h_minus_one, h_card]
       -- --   exact Nat.succ_sub_one n
 
-      -- let s : Type _ := { x : V // x ≠ v }
-      -- haveI : Fintype s := Subtype.fintype (fun x => x ≠ v)
-      -- let G' : SimpleGraph s := SimpleGraph.induce { x | x ≠ v } G
+      let V' : Type _ := { x : V // x ≠ v }
+      haveI : Fintype V' := Subtype.fintype (fun x => x ≠ v)
+      let G' : SimpleGraph V' := SimpleGraph.induce { x | x ≠ v } G
 
-      -- have G'_vert_card : Fintype.card s = m := by
-      --   have h_compl := Fintype.card_subtype_compl (fun x => x = v)
-      --   change Fintype.card {x // x ≠ v} = m
-      --   rw [h_compl]
-      --   exact (Nat.sub_eq_iff_eq_add V_gro_0).mpr (id (Eq.symm k))
+      have G'_vert_card : Fintype.card V' = m := by
+        have h_compl := Fintype.card_subtype_compl (fun x => x = v)
+        change Fintype.card {x // x ≠ v} = m
+        rw [h_compl]
+        exact (Nat.sub_eq_iff_eq_add V_gro_0).mpr (id (Eq.symm k))
 
-      -- have G'_col : G'.Colorable (G.maxDegree + 1) := by
-      --   -- hier müssen eigentlich nur noch mh und G'_vert_card zusammengeführt werden
-      --   sorry
-      --   -- eventuell mit Z. 387 (SimpleGraph.Coloring) ersetzen, kann evtl. das Knoten-
-      --   -- zahlargument in G' sparen und direkte definition von G' als subgraph erlauben
-      let G' := G.deleteEdges (G.incidenceSet v)
-      have G'_col : G'.Colorable (G.maxDegree + 1) := by
-        -- exact?
-        -- möchte sowas wie Colorable.mono_left nutzen, lean scheint G' ≤ G nicht automatisch zu erkennen
+      have G'_vert_card_reverse : m = Fintype.card V' := by
+        exact Eq.symm G'_vert_card
+
+      have mh_G' : m = Fintype.card V' → G'.Colorable (G.maxDegree + 1) := by
+        -- exact mh
         sorry
+
+      have G'_col : G'.Colorable (G.maxDegree + 1) := by
+        -- hier müssen eigentlich nur noch mh und G'_vert_card zusammengeführt werden
+        exact mh_G' G'_vert_card_reverse
+
+-- revert V !!!
+
+      -- let G' := G.deleteEdges (G.incidenceSet v)
+      -- have G'subgraph : G' ≤ G := by
+      --   exact SimpleGraph.deleteEdges_le (G.incidenceSet v)
+      -- have G'_col : G'.Colorable (G.maxDegree + 1) := by
+      --   -- exact?
+      --   -- möchte sowas wie Colorable.mono_left nutzen, lean scheint G' ≤ G nicht automatisch zu erkennen
+      --   -- refine SimpleGraph.Colorable.mono_left G'subgraph mh
+      --   -- funktioniert nicht, da es die Färbbarkeit von G vorraussetzt, un die Färbbarkeit
+      --   -- von G' als Teilgraph abzuleiten. Wir müssen hier dringend auf die Induktionsbehauptung
+      --   -- zurückkommen. Die Färbbarkeit von G anzunekmen um am Ende die Färbbatkeit von G zu
+      --   -- zeigen wäre ein Zirkelschluss.
