@@ -34,7 +34,7 @@ lemma inductivestep : ∀ n : ℕ, ∀ {W : Type*} [Fintype W] (G : SimpleGraph 
 
       let v : V := Classical.choice V_nonempty
       let V' : Type _ := { x : V // x ≠ v }
-      have : Fintype V' := by
+      have FinV' : Fintype V' := by
         exact Fintype.ofFinite V'
       let G' : SimpleGraph V' := SimpleGraph.induce { x | x ≠ v } G
 
@@ -75,7 +75,8 @@ lemma inductivestep : ∀ n : ℕ, ∀ {W : Type*} [Fintype W] (G : SimpleGraph 
       have v_degLeGmaxdeg : G.degree v ≤ G.maxDegree := by
         exact SimpleGraph.degree_le_maxDegree G v
 
-      have GcolEqG'col_vdeg : G'.Colorable (G.maxDegree + 1) ∧ G.degree v ≤ G.maxDegree → G.Colorable (G.maxDegree + 1) := by
+      have GcolEqG'colANDvdeg : G'.Colorable (G.maxDegree + 1) ∧
+      G.degree v ≤ G.maxDegree → G.Colorable (G.maxDegree + 1) := by
         simp only [and_imp]
         intro h hh
         refine (SimpleGraph.colorable_iff_exists_bdd_nat_coloring (G.maxDegree + 1)).mpr ?_
@@ -83,8 +84,40 @@ lemma inductivestep : ∀ n : ℕ, ∀ {W : Type*} [Fintype W] (G : SimpleGraph 
         -- müssten also bereits bestehene gültige Färbung für G' nehmen können (existiert nach G'_col)
         -- da eine gültige Färbung für lean mit der "nullten" Farbe beginnt, kann wegen "G.degree v ≤ G.maxDegree" (v_degLeGmaxdeg)
         -- auch v mit einer Farbe ≤ G.maxDegree gefärbt werden.
+        -- die folgende Umsetzung ist mit KI untersützt
 
+        obtain ⟨c'⟩ := h
 
+        classical
+        use ⟨fun (w : V) ↦
+          if h : w ≠ v then
+            (c' ⟨w, h⟩).val
+          else
+            0, -- Temporärer Platzhalter für deine freie Farbe, damit es kompiliert
+          by
+            -- Hier fordert Lean den Beweis, dass die Färbung gültig ist (c w1 ≠ c w2 für benachbarte Knoten)
+            sorry⟩
+
+        intro v_1
+        dsimp
+        split_ifs with h
+        · -- Fall 1: v_1 ≠ v ist WAHR (h : v_1 ≠ v)
+          -- Zeigt direkt, dass die Farbe aus c' kleiner als die Farbanzahl ist
+          omega
+        · -- Fall 2: v_1 ≠ v ist FALSCH (also v_1 = v, der Pivot-Knoten)
+          -- Zeigt, dass die Platzhalterfarbe 0 kleiner als G.maxDegree + 1 ist
+          exact (c' ⟨v_1, h⟩).isLt
+
+      have G_col : G.Colorable (G.maxDegree + 1) := by
+        -- komischerweise findet exact? die untere Zeile nicht. And.intro von KI
+        exact GcolEqG'colANDvdeg (And.intro G'_col v_degLeGmaxdeg)
+
+      have h_le : G.maxDegree + 1 ≤ nat + 1 := by
+        apply Nat.succ_le_succ
+        exact SimpleGraph.maxDegree_le_of_forall_degree_le G nat degle
+
+      refine SimpleGraph.Colorable.mono ?_ G_col
+      exact Order.add_one_le_iff.mpr h_le
 
 theorem faerbbar_zu_knotengrad : G.Colorable (G.maxDegree + 1) := by
   have hD : ∀ v : V, G.degree v ≤ G.maxDegree := by
